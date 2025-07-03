@@ -59,6 +59,7 @@ def format_roll_result(session: RollSession, verbose: bool = False,
                 console.print(f"  Modifier: {roll.modifier:+d}")
         
         console.print(f"[bold blue]Result: {roll.total}[/bold blue]")
+        console.print(f"[dim]Theoretical Average: {session.expression.average_value:.2f}[/dim]")
     
     else:
         # Multiple rolls

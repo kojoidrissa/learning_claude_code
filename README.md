@@ -135,10 +135,11 @@ dice-average history --clear
 
 ### Simple Combat Roll
 ```bash
-$ dice-average roll d20
+$ dice-average roll 1d20
 
-Rolling d20
+Rolling 1d20
 Result: 14
+Theoretical Average: 10.50
 ```
 
 ### Ability Score Generation
