@@ -16,7 +16,7 @@ class DiceParser:
     
     # Regex patterns for parsing dice notation
     DICE_PATTERN = re.compile(r'(\d*)d(\d+)', re.IGNORECASE)
-    MODIFIER_PATTERN = re.compile(r'([+-])\s*(\d+)')
+    MODIFIER_PATTERN = re.compile(r'([+-])\s*(\d+)(?!d)', re.IGNORECASE)
     WHITESPACE_PATTERN = re.compile(r'\s+')
     
     @classmethod

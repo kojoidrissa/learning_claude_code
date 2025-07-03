@@ -85,10 +85,7 @@ class DiceExpression(BaseModel):
         """String representation of the dice expression."""
         parts = []
         for group in self.dice_groups:
-            if group.count == 1:
-                parts.append(f"d{group.die.sides}")
-            else:
-                parts.append(f"{group.count}d{group.die.sides}")
+            parts.append(f"{group.count}d{group.die.sides}")
         
         result = " + ".join(parts)
         if self.modifier > 0:
