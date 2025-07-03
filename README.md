@@ -2,6 +2,8 @@
 
 A modern command-line tool for calculating dice roll averages and statistics, written in Python 3.12+.
 
+Initially created with Claude
+
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Pydantic v2](https://img.shields.io/badge/pydantic-v2-green.svg)](https://docs.pydantic.dev/)
 [![Typer](https://img.shields.io/badge/typer-0.9.0+-orange.svg)](https://typer.tiangolo.com/)
