@@ -253,11 +253,11 @@ class TestAppConfig:
         """Test default configuration."""
         config = AppConfig()
         
-        assert config.default_iterations == 100
+        assert config.default_iterations == 1
         assert config.default_seed is None
         assert config.output_format == OutputFormat.TEXT
         assert config.verbose is False
-        assert config.show_stats is True
+        assert config.show_stats is False
         assert config.history_limit == 100
     
     def test_config_validation(self):

@@ -32,7 +32,7 @@ class TestConfigManager:
             config = manager.load_config()
             
             assert isinstance(config, AppConfig)
-            assert config.default_iterations == 100
+            assert config.default_iterations == 1
             assert config.default_seed is None
             assert config.output_format == OutputFormat.TEXT
             assert config.verbose is False
@@ -95,7 +95,7 @@ class TestConfigManager:
             # Should fallback to default
             config = manager.load_config()
             assert isinstance(config, AppConfig)
-            assert config.default_iterations == 100
+            assert config.default_iterations == 1
     
     def test_load_empty_history(self):
         """Test loading empty history."""
@@ -168,7 +168,7 @@ class TestConfigManager:
             # Reset
             reset_config = manager.reset_config()
             
-            assert reset_config.default_iterations == 100
+            assert reset_config.default_iterations == 1
             assert reset_config.default_seed is None
             assert reset_config.output_format == OutputFormat.TEXT
     

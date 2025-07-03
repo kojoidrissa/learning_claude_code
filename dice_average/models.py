@@ -208,11 +208,11 @@ class AppConfig(BaseModel):
     """Application configuration."""
     model_config = ConfigDict()
     
-    default_iterations: int = Field(default=100, gt=0, description="Default number of iterations")
+    default_iterations: int = Field(default=1, gt=0, description="Default number of iterations")
     default_seed: Optional[int] = Field(default=None, description="Default random seed")
     output_format: OutputFormat = Field(default=OutputFormat.TEXT, description="Default output format")
     verbose: bool = Field(default=False, description="Enable verbose output by default")
-    show_stats: bool = Field(default=True, description="Show statistics by default")
+    show_stats: bool = Field(default=False, description="Show statistics by default")
     history_limit: int = Field(default=100, gt=0, description="Maximum number of sessions to keep in history")
     
     @validator('default_seed')

@@ -61,14 +61,14 @@ dice-average roll "4d6 + 2"
 
 Roll multiple times to see statistics:
 ```bash
-# Roll 3d6 1000 times
-dice-average roll 3d6 -i 1000
+# Roll 3d6 1000 times with statistics
+dice-average roll 3d6 -i 1000 --stats
 
-# Show detailed statistics
+# Roll many times for detailed analysis
 dice-average roll 3d6 -i 10000 --stats
 
 # Set a seed for reproducible results
-dice-average roll 2d20 -i 1000 --seed 42
+dice-average roll 2d20 -i 1000 --seed 42 --stats
 ```
 
 ### Advanced Features
@@ -105,10 +105,10 @@ dice-average history --clear
 
 #### `roll` command
 - `expression`: Dice notation (e.g., "3d6", "2d20+5")
-- `-i, --iterations`: Number of times to roll (default from config: 100)
+- `-i, --iterations`: Number of times to roll (default: 1)
 - `-s, --seed`: Random seed for reproducible results
 - `-v, --verbose`: Show individual roll results
-- `--stats/--no-stats`: Show detailed statistical analysis
+- `--stats/--no-stats`: Show detailed statistical analysis (default: no stats for single rolls)
 - `-j, --json`: Output results as JSON
 - `--save/--no-save`: Save to history (default: save)
 
@@ -209,7 +209,7 @@ dice-average can be configured through environment variables or the `config` com
 
 ```bash
 # Environment variables
-DICE_DEFAULT_ITERATIONS=100
+DICE_DEFAULT_ITERATIONS=1
 DICE_DEFAULT_SEED=42
 DICE_OUTPUT_FORMAT=json
 DICE_VERBOSE=true
@@ -223,8 +223,8 @@ Or use the config command:
 dice-average config --show
 
 # Set configuration values
-dice-average config --set default_iterations --value 150
-dice-average config --set verbose --value true
+dice-average config --set default_iterations --value 100
+dice-average config --set show_stats --value true
 
 # Reset to defaults
 dice-average config --reset
