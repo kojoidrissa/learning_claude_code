@@ -46,15 +46,15 @@ pip install -e ".[dev]"
 
 Roll a single die:
 ```bash
-dice-average d20
-dice-average 1d20  # equivalent
+dice-average roll d20
+dice-average roll 1d20  # equivalent
 ```
 
 Roll multiple dice:
 ```bash
-dice-average 3d6
-dice-average "2d8 + 1d4"
-dice-average "4d6 + 2"
+dice-average roll 3d6
+dice-average roll "2d8 + 1d4"
+dice-average roll "4d6 + 2"
 ```
 
 ### Statistical Analysis
@@ -62,31 +62,31 @@ dice-average "4d6 + 2"
 Roll multiple times to see statistics:
 ```bash
 # Roll 3d6 1000 times
-dice-average 3d6 -i 1000
+dice-average roll 3d6 -i 1000
 
 # Show detailed statistics
-dice-average 3d6 -i 10000 --stats
+dice-average roll 3d6 -i 10000 --stats
 
 # Set a seed for reproducible results
-dice-average 2d20 -i 1000 --seed 42
+dice-average roll 2d20 -i 1000 --seed 42
 ```
 
 ### Advanced Features
 
 Show individual roll results:
 ```bash
-dice-average 4d6 -i 10 --verbose
+dice-average roll 4d6 -i 10 --verbose
 ```
 
 Export results as JSON:
 ```bash
-dice-average 3d8 -i 1000 --json > results.json
+dice-average roll 3d8 -i 1000 --json > results.json
 ```
 
 Analyze probability distribution:
 ```bash
-dice-average analyze 3d6 --histogram
-dice-average analyze "2d10 + 5" --samples 50000
+dice-average analyze 3d6
+dice-average analyze "2d10 + 5" --extended
 ```
 
 View roll history:
@@ -95,7 +95,7 @@ View roll history:
 dice-average history
 
 # Show last 10 rolls
-dice-average history --last 10
+dice-average history --limit 10
 
 # Clear history
 dice-average history --clear
@@ -103,41 +103,47 @@ dice-average history --clear
 
 ### Command Options
 
-#### `roll` command (default)
+#### `roll` command
 - `expression`: Dice notation (e.g., "3d6", "2d20+5")
-- `-i, --iterations`: Number of times to roll (default: 1)
+- `-i, --iterations`: Number of times to roll (default from config: 100)
 - `-s, --seed`: Random seed for reproducible results
 - `-v, --verbose`: Show individual roll results
-- `--stats`: Show detailed statistical analysis
-- `--json`: Output results as JSON
-- `--no-color`: Disable colored output
+- `--stats/--no-stats`: Show detailed statistical analysis
+- `-j, --json`: Output results as JSON
+- `--save/--no-save`: Save to history (default: save)
 
 #### `analyze` command
 - `expression`: Dice notation to analyze
-- `-n, --samples`: Number of samples for distribution (default: 10000)
-- `--histogram`: Show distribution histogram
+- `-e, --extended`: Show extended statistics
+- `-j, --json`: Output results as JSON
 
 #### `history` command
-- `--clear`: Clear roll history
-- `-n, --last`: Show last N entries
+- `-l, --limit`: Number of recent sessions to show (default: 10)
+- `-c, --clear`: Clear all history
+- `-j, --json`: Output as JSON
+
+#### `info` command
+- `expression`: Dice notation to get detailed information about
+
+#### `config` command
+- `-s, --show`: Show current configuration
+- `-r, --reset`: Reset to default configuration
+- `--set`: Set configuration key
+- `--value`: Value to set
 
 ## Examples
 
 ### Simple Combat Roll
 ```bash
-$ dice-average d20
-╭─────────────────── Results for d20 ───────────────────╮
-│ Dice │ Rolls │ Sum │
-├──────┼───────┼─────┤
-│ d20  │ [14]  │ 14  │
-├──────┼───────┼─────┤
-│ Total│       │ 14  │
-╰──────┴───────┴─────╯
+$ dice-average roll d20
+
+Rolling d20
+Result: 14
 ```
 
 ### Ability Score Generation
 ```bash
-$ dice-average 3d6 -i 6 -v
+$ dice-average roll 3d6 -i 6 -v
 Rolling 3d6 6 times...
 ╭─────────────────── Results for 3d6 ───────────────────╮
 │ Roll # │ Dice │ Rolls      │ Total │
@@ -155,7 +161,7 @@ Rolling 3d6 6 times...
 
 ### Statistical Analysis
 ```bash
-$ dice-average 2d6 -i 10000 --stats
+$ dice-average roll 2d6 -i 10000 --stats
 Rolling 2d6 10,000 times...
 ╭─────────────────── Results for 2d6 ───────────────────╮
 │ Metric         │ Value    │
@@ -184,7 +190,7 @@ Distribution:
 
 ### Complex Expression
 ```bash
-$ dice-average "2d8 + 1d6 + 3" -i 1000
+$ dice-average roll "2d8 + 1d6 + 3" -i 1000
 ╭────────────── Results for 2d8 + 1d6 + 3 ──────────────╮
 │ Metric         │ Value    │
 ├────────────────┼──────────┤
@@ -199,16 +205,29 @@ $ dice-average "2d8 + 1d6 + 3" -i 1000
 
 ## Configuration
 
-dice-average can be configured through environment variables or a `.env` file:
+dice-average can be configured through environment variables or the `config` command:
 
 ```bash
-# .env file
-DICE_USE_COLOR=true
-DICE_OUTPUT_FORMAT=table
-DICE_DEFAULT_ITERATIONS=1
-DICE_MAX_ITERATIONS=1000000
-DICE_SAVE_HISTORY=true
-DICE_HISTORY_FILE=~/.dice_average_history.json
+# Environment variables
+DICE_DEFAULT_ITERATIONS=100
+DICE_DEFAULT_SEED=42
+DICE_OUTPUT_FORMAT=json
+DICE_VERBOSE=true
+DICE_SHOW_STATS=false
+DICE_HISTORY_LIMIT=50
+```
+
+Or use the config command:
+```bash
+# Show current configuration
+dice-average config --show
+
+# Set configuration values
+dice-average config --set default_iterations --value 150
+dice-average config --set verbose --value true
+
+# Reset to defaults
+dice-average config --reset
 ```
 
 ## Development
@@ -242,17 +261,21 @@ mypy dice_average
 dice-average/
 ├── dice_average/
 │   ├── __init__.py        # Package initialization
-│   ├── __main__.py        # Entry point
 │   ├── cli.py             # Typer CLI application
-│   ├── config.py          # Configuration settings
+│   ├── config.py          # Configuration management
 │   ├── models.py          # Pydantic data models
 │   ├── parser.py          # Dice notation parser
 │   ├── roller.py          # Dice rolling logic
 │   └── statistics.py      # Statistical calculations
 ├── tests/                 # Test suite
+│   ├── test_models.py     # Model tests
+│   ├── test_parser.py     # Parser tests
+│   ├── test_roller.py     # Roller tests
+│   ├── test_statistics.py # Statistics tests
+│   ├── test_config.py     # Config tests
+│   └── test_cli.py        # CLI tests
 ├── pyproject.toml         # Project configuration
-├── README.md              # This file
-└── LICENSE                # MIT License
+└── README.md              # This file
 ```
 
 ## Dice Notation Guide
