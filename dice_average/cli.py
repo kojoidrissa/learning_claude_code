@@ -188,14 +188,18 @@ def roll(
         dice_expr = parse_dice_expression(expression)
         
         # Roll dice
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,
-        ) as progress:
-            task = progress.add_task(f"Rolling {expression}...", total=None)
+        if json_output:
+            # No progress bar for JSON output
             session = roll_dice(dice_expr, iterations, seed)
-            progress.update(task, completed=True)
+        else:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+            ) as progress:
+                task = progress.add_task(f"Rolling {expression}...", total=None)
+                session = roll_dice(dice_expr, iterations, seed)
+                progress.update(task, completed=True)
         
         # Save to history
         if save:
@@ -213,6 +217,7 @@ def roll(
                 "average": session.average_total,
                 "min": session.min_total,
                 "max": session.max_total,
+                "theoretical_average": session.expression.average_value,
             }
             
             if stats:
