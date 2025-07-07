@@ -204,7 +204,7 @@ class TestConvenienceFunctions:
         assert info["modifier"] == -1
         assert info["min_value"] == 2  # 2*1 + 1*1 - 1
         assert info["max_value"] == 19  # 2*6 + 1*8 - 1
-        assert info["average_value"] == 11.5  # 2*3.5 + 1*4.5 - 1
+        assert info["average_value"] == 10.5  # 2*3.5 + 1*4.5 - 1
         
         assert len(info["dice_types"]) == 2
         

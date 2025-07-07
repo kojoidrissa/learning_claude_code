@@ -39,6 +39,17 @@ class DiceParser:
         # Clean up the expression
         expression = cls.WHITESPACE_PATTERN.sub('', expression.strip())
         
+        # Check for invalid characters early
+        import string
+        valid_chars = set(string.digits + 'dD+- ')
+        if not set(expression).issubset(valid_chars):
+            invalid_chars = set(expression) - valid_chars
+            raise DiceParseError(f"Invalid characters in expression: {''.join(sorted(invalid_chars))}")
+        
+        # Check for negative dice count (leading minus before d)
+        if re.search(r'-\d*[dD]\d+', expression):
+            raise DiceParseError("Negative dice counts are not allowed")
+        
         # Find all dice groups
         dice_groups = []
         dice_matches = cls.DICE_PATTERN.findall(expression)

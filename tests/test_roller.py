@@ -226,8 +226,8 @@ class TestDiceSimulator:
         
         comparison = simulator.compare_expressions(expr1, expr2, 1000)
         
-        assert comparison["expression1"] == "d6"
-        assert comparison["expression2"] == "d8"
+        assert comparison["expression1"] == "1d6"
+        assert comparison["expression2"] == "1d8"
         assert comparison["iterations"] == 1000
         assert comparison["expr1_wins"] + comparison["expr2_wins"] + comparison["ties"] == 1000
         assert 0.0 <= comparison["expr1_win_rate"] <= 1.0

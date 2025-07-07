@@ -29,8 +29,9 @@ class TestDie:
     
     def test_die_immutable(self):
         """Test that die is immutable."""
+        from pydantic_core import ValidationError
         die = Die(sides=6)
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValidationError):
             die.sides = 8
 
 
@@ -92,7 +93,7 @@ class TestDiceExpression:
         
         assert expr.min_value == 2  # 2 + 1 - 1
         assert expr.max_value == 19  # 12 + 8 - 1
-        assert expr.average_value == 11.5  # 7 + 4.5 - 1
+        assert expr.average_value == 10.5  # 7 + 4.5 - 1
 
 
 class TestRollResult:
@@ -188,7 +189,7 @@ class TestStatisticsResult:
         )
         
         assert stats.most_likely_value in [1, 2, 3, 4, 5, 6]  # All equally likely
-        assert stats.median_value == 4.0  # First value with cumulative prob >= 0.5
+        assert stats.median_value == 3.0  # First value with cumulative prob >= 0.5
 
 
 class TestRollHistory:
