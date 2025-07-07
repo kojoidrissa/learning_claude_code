@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Optional, Union
 from enum import Enum
 
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class OutputFormat(str, Enum):
@@ -212,7 +212,8 @@ class AppConfig(BaseModel):
     show_stats: bool = Field(default=False, description="Show statistics by default")
     history_limit: int = Field(default=100, gt=0, description="Maximum number of sessions to keep in history")
     
-    @validator('default_seed')
+    @field_validator('default_seed')
+    @classmethod
     def validate_seed(cls, v):
         if v is not None and (v < 0 or v > 2**32 - 1):
             raise ValueError('Seed must be between 0 and 2^32 - 1')
