@@ -258,12 +258,18 @@ mypy dice_average
 ```
 
 ### Project Structure
+
+The codebase follows a modular architecture with clear separation of concerns:
+
 ```
 dice-average/
 ├── dice_average/
 │   ├── __init__.py        # Package initialization
-│   ├── cli.py             # Typer CLI application
+│   ├── cli.py             # Typer CLI application (refactored for maintainability)
 │   ├── config.py          # Configuration management
+│   ├── display.py         # Terminal display and formatting utilities
+│   ├── error_handling.py  # Error handling decorators and utilities
+│   ├── json_output.py     # JSON output formatting
 │   ├── models.py          # Pydantic data models
 │   ├── parser.py          # Dice notation parser
 │   ├── roller.py          # Dice rolling logic
@@ -278,6 +284,12 @@ dice-average/
 ├── pyproject.toml         # Project configuration
 └── README.md              # This file
 ```
+
+**Architecture Notes:**
+- **`cli.py`**: Refactored to be lightweight, focusing only on command definitions and argument parsing
+- **`display.py`**: Handles all terminal output formatting and Rich table generation
+- **`json_output.py`**: Dedicated module for clean JSON formatting
+- **`error_handling.py`**: Centralized error handling with decorators for consistent behavior
 
 ## Dice Notation Guide
 
