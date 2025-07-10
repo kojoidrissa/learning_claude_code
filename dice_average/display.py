@@ -32,10 +32,7 @@ def handle_parse_error(expression: str, error: DiceParseError) -> None:
 def format_roll_result(session: RollSession, verbose: bool = False, 
                       show_stats: bool = True) -> None:
     """Format and display roll results."""
-    if len(session.rolls) == 1:
-        _format_single_roll(session, verbose)
-    else:
-        _format_multiple_rolls(session, verbose, show_stats)
+    _format_single_roll(session, verbose)
 
 
 def _format_single_roll(session: RollSession, verbose: bool) -> None:
@@ -57,8 +54,10 @@ def _format_multiple_rolls(session: RollSession, verbose: bool, show_stats: bool
     if verbose:
         _show_multiple_roll_details(session)
     
-    if show_stats:
-        _show_session_statistics(session)
+    # Show only the average result and theoretical average
+    avg_result = sum(roll.total for roll in session.rolls) / len(session.rolls)
+    console.print(f"[bold blue]Average Result: {avg_result:.2f}[/bold blue]")
+    console.print(f"[dim]Theoretical Average: {session.expression.average_value:.2f}[/dim]")
 
 
 def _show_roll_breakdown(roll, session: RollSession) -> None:

@@ -32,21 +32,18 @@ console = Console()
 @handle_cli_error
 def roll(
     expression: str = typer.Argument(..., help="Dice expression (e.g., '3d6', '2d20+5')"),
-    iterations: Optional[int] = typer.Option(None, "--iterations", "-i", help="Number of rolls"),
     seed: Optional[int] = typer.Option(None, "--seed", "-s", help="Random seed"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
-    stats: Optional[bool] = typer.Option(None, "--stats/--no-stats", help="Show statistics"),
     json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
     save: bool = typer.Option(True, "--save/--no-save", help="Save to history"),
 ) -> None:
-    """Roll dice and calculate averages."""
+    """Roll dice once and show result."""
     config = load_config_with_env()
     config_manager = get_config_manager()
     
     # Apply configuration defaults
-    iterations = iterations if iterations is not None else config.default_iterations
+    iterations = 1  # Always single roll
     seed = seed if seed is not None else config.default_seed
-    stats = stats if stats is not None else config.show_stats
     
     # Validate iterations
     if iterations <= 0:
@@ -62,10 +59,10 @@ def roll(
     
     # Output results
     if json_output:
-        output_data = format_roll_json(session, iterations, seed, stats)
+        output_data = format_roll_json(session, iterations, seed, False)
         print_json(output_data)
     else:
-        format_roll_result(session, verbose, stats)
+        format_roll_result(session, verbose, False)
 
 
 def _execute_roll(dice_expr: Any, iterations: int, seed: Optional[int], 
