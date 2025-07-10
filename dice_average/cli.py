@@ -8,16 +8,14 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .config import get_config_manager, load_config_with_env
 from .display import (
-    format_roll_result, format_statistics, format_history,
-    format_expression_info, format_config_display, format_extended_statistics,
-    print_success, print_json
+    format_roll_result, format_history,
+    format_expression_info, format_config_display,
+    print_success
 )
 from .error_handling import handle_cli_error, safe_int_conversion, safe_bool_conversion
-from .json_output import format_roll_json, format_analyze_json, format_history_json
 from .models import OutputFormat
 from .parser import parse_dice_expression, get_expression_info
 from .roller import roll_dice
-from .statistics import DiceStatistics
 
 app = typer.Typer(
     name="dice-average",
@@ -32,21 +30,17 @@ console = Console()
 @handle_cli_error
 def roll(
     expression: str = typer.Argument(..., help="Dice expression (e.g., '3d6', '2d20+5')"),
-    iterations: Optional[int] = typer.Option(None, "--iterations", "-i", help="Number of rolls"),
     seed: Optional[int] = typer.Option(None, "--seed", "-s", help="Random seed"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
-    stats: Optional[bool] = typer.Option(None, "--stats/--no-stats", help="Show statistics"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
     save: bool = typer.Option(True, "--save/--no-save", help="Save to history"),
 ) -> None:
-    """Roll dice and calculate averages."""
+    """Roll dice once and show result."""
     config = load_config_with_env()
     config_manager = get_config_manager()
     
     # Apply configuration defaults
-    iterations = iterations if iterations is not None else config.default_iterations
+    iterations = 1  # Always single roll
     seed = seed if seed is not None else config.default_seed
-    stats = stats if stats is not None else config.show_stats
     
     # Validate iterations
     if iterations <= 0:
@@ -54,35 +48,28 @@ def roll(
     
     # Parse and roll dice
     dice_expr = parse_dice_expression(expression)
-    session = _execute_roll(dice_expr, iterations, seed, expression, json_output)
+    session = _execute_roll(dice_expr, iterations, seed, expression)
     
     # Save to history
     if save:
         _save_session_to_history(config_manager, session)
     
     # Output results
-    if json_output:
-        output_data = format_roll_json(session, iterations, seed, stats)
-        print_json(output_data)
-    else:
-        format_roll_result(session, verbose, stats)
+    format_roll_result(session, verbose, False)
 
 
 def _execute_roll(dice_expr: Any, iterations: int, seed: Optional[int], 
-                 expression: str, json_output: bool) -> Any:
+                 expression: str) -> Any:
     """Execute the dice roll with optional progress display."""
-    if json_output:
-        return roll_dice(dice_expr, iterations, seed)
-    else:
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,
-        ) as progress:
-            task = progress.add_task(f"Rolling {expression}...", total=None)
-            session = roll_dice(dice_expr, iterations, seed)
-            progress.update(task, completed=True)
-            return session
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task(f"Rolling {expression}...", total=None)
+        session = roll_dice(dice_expr, iterations, seed)
+        progress.update(task, completed=True)
+        return session
 
 
 def _save_session_to_history(config_manager: Any, session: Any) -> None:
@@ -92,28 +79,6 @@ def _save_session_to_history(config_manager: Any, session: Any) -> None:
     config_manager.save_history(history)
 
 
-@app.command()
-@handle_cli_error
-def analyze(
-    expression: str = typer.Argument(..., help="Dice expression to analyze"),
-    extended: bool = typer.Option(False, "--extended", "-e", help="Show extended statistics"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
-) -> None:
-    """Analyze dice expressions and show probability distributions."""
-    dice_expr = parse_dice_expression(expression)
-    stats_result = DiceStatistics.calculate_statistics(dice_expr)
-    
-    extended_stats = None
-    if extended:
-        extended_stats = DiceStatistics.get_extended_statistics(dice_expr)
-    
-    if json_output:
-        output_data = format_analyze_json(dice_expr, stats_result, extended_stats)
-        print_json(output_data)
-    else:
-        format_statistics(dice_expr, stats_result)
-        if extended:
-            format_extended_statistics(extended_stats)
 
 
 @app.command()
@@ -121,7 +86,6 @@ def analyze(
 def history(
     limit: int = typer.Option(10, "--limit", "-l", help="Number of recent sessions to show"),
     clear: bool = typer.Option(False, "--clear", "-c", help="Clear all history"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
 ) -> None:
     """Show or manage roll history."""
     config_manager = get_config_manager()
@@ -133,11 +97,7 @@ def history(
             print_success("History cleared.")
         return
     
-    if json_output:
-        output_data = format_history_json(history_data, limit)
-        print_json(output_data)
-    else:
-        format_history(history_data, limit)
+    format_history(history_data, limit)
 
 
 @app.command()
@@ -230,7 +190,7 @@ def main():
     
     # Check if first argument is a known subcommand
     first_arg = sys.argv[1]
-    subcommands = {"analyze", "history", "info", "config", "version"}
+    subcommands = {"history", "info", "config", "version"}
     
     if first_arg in subcommands or first_arg.startswith('-'):
         # Run as multi-command app
