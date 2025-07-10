@@ -19,7 +19,7 @@ class TestCLI:
             return self.runner.invoke(app, ['--help'])
         
         first_arg = args[0]
-        subcommands = {'analyze', 'history', 'info', 'config', 'version'}
+        subcommands = {'history', 'info', 'config', 'version'}
         
         if first_arg in subcommands or first_arg.startswith('-'):
             # Run as multi-command app
@@ -54,26 +54,6 @@ class TestCLI:
     def test_roll_command_invalid_expression(self):
         """Test roll command with invalid expression."""
         result = self._invoke_main(["invalid"])
-        assert result.exit_code == 1
-        assert "Error parsing dice expression" in result.stdout
-    
-    def test_analyze_command_basic(self):
-        """Test basic analyze command."""
-        result = self.runner.invoke(app, ["analyze", "2d6"])
-        assert result.exit_code == 0
-        assert "Statistical Analysis" in result.stdout
-        assert "Basic Statistics" in result.stdout
-    
-    def test_analyze_command_extended(self):
-        """Test analyze command with extended statistics."""
-        result = self.runner.invoke(app, ["analyze", "3d6", "--extended"])
-        assert result.exit_code == 0
-        assert "Statistical Analysis" in result.stdout
-        assert "Extended Statistics" in result.stdout
-    
-    def test_analyze_command_invalid_expression(self):
-        """Test analyze command with invalid expression."""
-        result = self.runner.invoke(app, ["analyze", "invalid"])
         assert result.exit_code == 1
         assert "Error parsing dice expression" in result.stdout
     
@@ -156,20 +136,6 @@ class TestCLI:
             assert result.exit_code == 0, f"Failed for expression: {expr}"
             assert f"Rolling {expr}" in result.stdout or expr in result.stdout
     
-    def test_analyze_various_expressions(self):
-        """Test analyze command with various expressions."""
-        expressions = [
-            "d6",
-            "2d6",
-            "3d6+2",
-            "1d8+1d6",
-        ]
-        
-        for expr in expressions:
-            result = self.runner.invoke(app, ["analyze", expr])
-            assert result.exit_code == 0, f"Failed for expression: {expr}"
-            assert "Statistical Analysis" in result.stdout
-    
     def test_help_messages(self):
         """Test help messages."""
         # Main help
@@ -178,7 +144,7 @@ class TestCLI:
         assert "dice-average" in result.stdout
         
         # Command help
-        commands = ["roll", "analyze", "history", "info", "config", "version"]
+        commands = ["roll", "history", "info", "config", "version"]
         for cmd in commands:
             result = self.runner.invoke(app, [cmd, "--help"])
             assert result.exit_code == 0
@@ -205,7 +171,5 @@ class TestCLI:
         assert result.exit_code == 0
         
         # Complex expression
-        result = self.runner.invoke(app, [
-            "analyze", "10d6+5d8+3d4-10"
-        ])
+        result = self._invoke_main(["10d6+5d8+3d4-10"])
         assert result.exit_code == 0

@@ -8,15 +8,14 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .config import get_config_manager, load_config_with_env
 from .display import (
-    format_roll_result, format_statistics, format_history,
-    format_expression_info, format_config_display, format_extended_statistics,
+    format_roll_result, format_history,
+    format_expression_info, format_config_display,
     print_success
 )
 from .error_handling import handle_cli_error, safe_int_conversion, safe_bool_conversion
 from .models import OutputFormat
 from .parser import parse_dice_expression, get_expression_info
 from .roller import roll_dice
-from .statistics import DiceStatistics
 
 app = typer.Typer(
     name="dice-average",
@@ -80,23 +79,6 @@ def _save_session_to_history(config_manager: Any, session: Any) -> None:
     config_manager.save_history(history)
 
 
-@app.command()
-@handle_cli_error
-def analyze(
-    expression: str = typer.Argument(..., help="Dice expression to analyze"),
-    extended: bool = typer.Option(False, "--extended", "-e", help="Show extended statistics"),
-) -> None:
-    """Analyze dice expressions and show probability distributions."""
-    dice_expr = parse_dice_expression(expression)
-    stats_result = DiceStatistics.calculate_statistics(dice_expr)
-    
-    extended_stats = None
-    if extended:
-        extended_stats = DiceStatistics.get_extended_statistics(dice_expr)
-    
-    format_statistics(dice_expr, stats_result)
-    if extended:
-        format_extended_statistics(extended_stats)
 
 
 @app.command()
@@ -208,7 +190,7 @@ def main():
     
     # Check if first argument is a known subcommand
     first_arg = sys.argv[1]
-    subcommands = {"analyze", "history", "info", "config", "version"}
+    subcommands = {"history", "info", "config", "version"}
     
     if first_arg in subcommands or first_arg.startswith('-'):
         # Run as multi-command app

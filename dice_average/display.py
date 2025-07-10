@@ -10,7 +10,6 @@ from rich.text import Text
 
 from .models import RollSession
 from .parser import DiceParseError
-from .statistics import SessionAnalyzer
 
 console = Console()
 
@@ -80,67 +79,12 @@ def _show_multiple_roll_details(session: RollSession) -> None:
         console.print(f"  Results: {', '.join(str(r.total) for r in session.rolls[:10])}...")
 
 
-def _show_session_statistics(session: RollSession) -> None:
-    """Display statistics table for a roll session."""
-    stats = SessionAnalyzer.analyze_session(session)
-    
-    table = Table(title="Roll Statistics")
-    table.add_column("Statistic", style="cyan")
-    table.add_column("Value", style="magenta")
-    
-    table.add_row("Total Rolls", str(stats["total_rolls"]))
-    table.add_row("Average", f"{stats['mean']:.2f}")
-    table.add_row("Median", f"{stats['median']:.2f}")
-    table.add_row("Min", str(stats["min_value"]))
-    table.add_row("Max", str(stats["max_value"]))
-    table.add_row("Std Dev", f"{stats['standard_deviation']:.2f}")
-    table.add_row("Theoretical Avg", f"{stats['theoretical_mean']:.2f}")
-    
-    console.print(table)
 
 
-def format_statistics(expression, stats_result) -> None:
-    """Format and display statistical analysis."""
-    console.print(f"\n[bold green]Statistical Analysis: {expression}[/bold green]")
-    
-    _show_basic_statistics(stats_result)
-    _show_probability_distribution(stats_result)
 
 
-def _show_basic_statistics(stats_result) -> None:
-    """Display basic statistics table."""
-    basic_table = Table(title="Basic Statistics")
-    basic_table.add_column("Property", style="cyan")
-    basic_table.add_column("Value", style="magenta")
-    
-    basic_table.add_row("Min Value", str(stats_result.theoretical_min))
-    basic_table.add_row("Max Value", str(stats_result.theoretical_max))
-    basic_table.add_row("Average", f"{stats_result.theoretical_average:.2f}")
-    basic_table.add_row("Most Likely", str(stats_result.most_likely_value))
-    basic_table.add_row("Median", f"{stats_result.median_value:.2f}")
-    
-    console.print(basic_table)
 
 
-def _show_probability_distribution(stats_result) -> None:
-    """Display probability distribution table."""
-    sorted_probs = sorted(stats_result.probability_distribution.items(), 
-                         key=lambda x: x[1], reverse=True)[:10]
-    
-    if sorted_probs:
-        prob_table = Table(title="Top 10 Most Likely Values")
-        prob_table.add_column("Value", style="cyan")
-        prob_table.add_column("Probability", style="magenta")
-        prob_table.add_column("Percentage", style="yellow")
-        
-        for value, prob in sorted_probs:
-            prob_table.add_row(
-                str(value), 
-                f"{prob:.4f}", 
-                f"{prob * 100:.2f}%"
-            )
-        
-        console.print(prob_table)
 
 
 def format_history(history, limit: int = 10) -> None:
@@ -243,19 +187,6 @@ def format_config_display(current_config, config_info) -> None:
     console.print(f"History File: {config_info['history_file']} ({'exists' if config_info['history_exists'] else 'missing'})")
 
 
-def format_extended_statistics(extended_stats) -> None:
-    """Format and display extended statistics."""
-    ext_table = Table(title="Extended Statistics")
-    ext_table.add_column("Statistic", style="cyan")
-    ext_table.add_column("Value", style="magenta")
-    
-    ext_table.add_row("Variance", f"{extended_stats['variance']:.4f}")
-    ext_table.add_row("Std Deviation", f"{extended_stats['standard_deviation']:.4f}")
-    ext_table.add_row("Skewness", f"{extended_stats['skewness']:.4f}")
-    ext_table.add_row("Kurtosis", f"{extended_stats['kurtosis']:.4f}")
-    ext_table.add_row("CV", f"{extended_stats['coefficient_of_variation']:.4f}")
-    
-    console.print(ext_table)
 
 
 def print_success(message: str) -> None:
