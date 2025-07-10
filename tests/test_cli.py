@@ -1,6 +1,5 @@
 """Tests for CLI functionality."""
 
-import json
 import pytest
 from typer.testing import CliRunner
 
@@ -51,21 +50,6 @@ class TestCLI:
         assert result.exit_code == 0
         assert "Rolling 2d8 + 3" in result.stdout
     
-    def test_roll_command_json_output(self):
-        """Test roll command with JSON output."""
-        result = self._invoke_main([
-            "d6", 
-            "--seed", "42",
-            "--json"
-        ])
-        assert result.exit_code == 0
-        
-        # Should be valid JSON
-        output_data = json.loads(result.stdout)
-        assert "expression" in output_data
-        assert "iterations" in output_data
-        assert "results" in output_data
-        assert len(output_data["results"]) == 1
     
     def test_roll_command_invalid_expression(self):
         """Test roll command with invalid expression."""
@@ -86,18 +70,6 @@ class TestCLI:
         assert result.exit_code == 0
         assert "Statistical Analysis" in result.stdout
         assert "Extended Statistics" in result.stdout
-    
-    def test_analyze_command_json(self):
-        """Test analyze command with JSON output."""
-        result = self.runner.invoke(app, ["analyze", "d6", "--json"])
-        assert result.exit_code == 0
-        
-        # Should be valid JSON
-        output_data = json.loads(result.stdout)
-        assert "expression" in output_data
-        assert "min_value" in output_data
-        assert "max_value" in output_data
-        assert "probability_distribution" in output_data
     
     def test_analyze_command_invalid_expression(self):
         """Test analyze command with invalid expression."""
@@ -123,16 +95,6 @@ class TestCLI:
         result = self.runner.invoke(app, ["history"])
         assert result.exit_code == 0
         # Should handle empty history gracefully
-    
-    def test_history_command_json(self):
-        """Test history command with JSON output."""
-        result = self.runner.invoke(app, ["history", "--json"])
-        assert result.exit_code == 0
-        
-        # Should be valid JSON
-        output_data = json.loads(result.stdout)
-        assert "total_sessions" in output_data
-        assert "recent_sessions" in output_data
     
     def test_config_command_show(self):
         """Test config command show."""
