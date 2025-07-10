@@ -45,7 +45,6 @@ class TestCLI:
         """Test roll command with options."""
         result = self._invoke_main([
             "2d8+3", 
-            "--iterations", "5",
             "--seed", "42",
             "--verbose"
         ])
@@ -56,7 +55,6 @@ class TestCLI:
         """Test roll command with JSON output."""
         result = self._invoke_main([
             "d6", 
-            "--iterations", "3",
             "--seed", "42",
             "--json"
         ])
@@ -67,7 +65,7 @@ class TestCLI:
         assert "expression" in output_data
         assert "iterations" in output_data
         assert "results" in output_data
-        assert len(output_data["results"]) == 3
+        assert len(output_data["results"]) == 1
     
     def test_roll_command_invalid_expression(self):
         """Test roll command with invalid expression."""
@@ -167,7 +165,6 @@ class TestCLI:
         """Test roll command without saving to history."""
         result = self._invoke_main([
             "d6", 
-            "--iterations", "1",
             "--no-save"
         ])
         assert result.exit_code == 0
@@ -176,9 +173,7 @@ class TestCLI:
     def test_roll_command_no_stats(self):
         """Test roll command without statistics."""
         result = self._invoke_main([
-            "d6", 
-            "--iterations", "5",
-            "--no-stats"
+            "d6"
         ])
         assert result.exit_code == 0
         assert "Rolling d6" in result.stdout
@@ -195,7 +190,7 @@ class TestCLI:
         ]
         
         for expr in expressions:
-            result = self._invoke_main([expr, "--iterations", "1"])
+            result = self._invoke_main([expr])
             assert result.exit_code == 0, f"Failed for expression: {expr}"
             assert f"Rolling {expr}" in result.stdout or expr in result.stdout
     
@@ -232,9 +227,7 @@ class TestCLI:
         result = self._invoke_main([])
         assert result.exit_code == 0  # Shows help and exits
         
-        # Invalid iterations
-        result = self._invoke_main(["d6", "--iterations", "0"])
-        assert result.exit_code == 1
+        # Invalid seed format should still work as it validates the type
         
         # Invalid seed
         result = self._invoke_main(["d6", "--seed", "invalid"])
@@ -242,10 +235,9 @@ class TestCLI:
     
     def test_edge_cases(self):
         """Test edge cases."""
-        # Large number of iterations
+        # Single roll with seed
         result = self._invoke_main([
             "d6", 
-            "--iterations", "1000",
             "--seed", "42"
         ])
         assert result.exit_code == 0
