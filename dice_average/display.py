@@ -1,0 +1,274 @@
+"""Display and formatting utilities for the dice average calculator."""
+
+import json
+from typing import Dict, Any
+
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
+
+from .models import RollSession
+from .parser import DiceParseError
+from .statistics import SessionAnalyzer
+
+console = Console()
+
+
+def handle_parse_error(expression: str, error: DiceParseError) -> None:
+    """Handle dice parsing errors with helpful messages."""
+    console.print(f"[red]Error parsing dice expression:[/red] {expression}")
+    console.print(f"[red]{error}[/red]")
+    console.print("\n[yellow]Supported formats:[/yellow]")
+    
+    examples = [
+        "d6", "3d6", "2d20+5", "1d8+2d6", "4d6-2", "d20 + 3"
+    ]
+    
+    for example in examples:
+        console.print(f"  • {example}")
+
+
+def format_roll_result(session: RollSession, verbose: bool = False, 
+                      show_stats: bool = True) -> None:
+    """Format and display roll results."""
+    if len(session.rolls) == 1:
+        _format_single_roll(session, verbose)
+    else:
+        _format_multiple_rolls(session, verbose, show_stats)
+
+
+def _format_single_roll(session: RollSession, verbose: bool) -> None:
+    """Format output for a single roll."""
+    roll = session.rolls[0]
+    console.print(f"\n[bold green]Rolling {session.expression}[/bold green]")
+    
+    if verbose:
+        _show_roll_breakdown(roll, session)
+    
+    console.print(f"[bold blue]Result: {roll.total}[/bold blue]")
+    console.print(f"[dim]Theoretical Average: {session.expression.average_value:.2f}[/dim]")
+
+
+def _format_multiple_rolls(session: RollSession, verbose: bool, show_stats: bool) -> None:
+    """Format output for multiple rolls."""
+    console.print(f"\n[bold green]Rolling {session.expression} × {len(session.rolls)}[/bold green]")
+    
+    if verbose:
+        _show_multiple_roll_details(session)
+    
+    if show_stats:
+        _show_session_statistics(session)
+
+
+def _show_roll_breakdown(roll, session: RollSession) -> None:
+    """Show detailed breakdown of individual dice rolls."""
+    for i, group_rolls in enumerate(roll.individual_rolls):
+        group = session.expression.dice_groups[i]
+        rolls_str = " + ".join(str(r) for r in group_rolls)
+        console.print(f"  {group.count}d{group.die.sides}: [{rolls_str}] = {sum(group_rolls)}")
+    
+    if roll.modifier != 0:
+        console.print(f"  Modifier: {roll.modifier:+d}")
+
+
+def _show_multiple_roll_details(session: RollSession) -> None:
+    """Show details for multiple roll sessions."""
+    if len(session.rolls) <= 20:
+        for i, roll in enumerate(session.rolls, 1):
+            console.print(f"  Roll {i}: {roll.total}")
+    else:
+        console.print(f"  Results: {', '.join(str(r.total) for r in session.rolls[:10])}...")
+
+
+def _show_session_statistics(session: RollSession) -> None:
+    """Display statistics table for a roll session."""
+    stats = SessionAnalyzer.analyze_session(session)
+    
+    table = Table(title="Roll Statistics")
+    table.add_column("Statistic", style="cyan")
+    table.add_column("Value", style="magenta")
+    
+    table.add_row("Total Rolls", str(stats["total_rolls"]))
+    table.add_row("Average", f"{stats['mean']:.2f}")
+    table.add_row("Median", f"{stats['median']:.2f}")
+    table.add_row("Min", str(stats["min_value"]))
+    table.add_row("Max", str(stats["max_value"]))
+    table.add_row("Std Dev", f"{stats['standard_deviation']:.2f}")
+    table.add_row("Theoretical Avg", f"{stats['theoretical_mean']:.2f}")
+    
+    console.print(table)
+
+
+def format_statistics(expression, stats_result) -> None:
+    """Format and display statistical analysis."""
+    console.print(f"\n[bold green]Statistical Analysis: {expression}[/bold green]")
+    
+    _show_basic_statistics(stats_result)
+    _show_probability_distribution(stats_result)
+
+
+def _show_basic_statistics(stats_result) -> None:
+    """Display basic statistics table."""
+    basic_table = Table(title="Basic Statistics")
+    basic_table.add_column("Property", style="cyan")
+    basic_table.add_column("Value", style="magenta")
+    
+    basic_table.add_row("Min Value", str(stats_result.theoretical_min))
+    basic_table.add_row("Max Value", str(stats_result.theoretical_max))
+    basic_table.add_row("Average", f"{stats_result.theoretical_average:.2f}")
+    basic_table.add_row("Most Likely", str(stats_result.most_likely_value))
+    basic_table.add_row("Median", f"{stats_result.median_value:.2f}")
+    
+    console.print(basic_table)
+
+
+def _show_probability_distribution(stats_result) -> None:
+    """Display probability distribution table."""
+    sorted_probs = sorted(stats_result.probability_distribution.items(), 
+                         key=lambda x: x[1], reverse=True)[:10]
+    
+    if sorted_probs:
+        prob_table = Table(title="Top 10 Most Likely Values")
+        prob_table.add_column("Value", style="cyan")
+        prob_table.add_column("Probability", style="magenta")
+        prob_table.add_column("Percentage", style="yellow")
+        
+        for value, prob in sorted_probs:
+            prob_table.add_row(
+                str(value), 
+                f"{prob:.4f}", 
+                f"{prob * 100:.2f}%"
+            )
+        
+        console.print(prob_table)
+
+
+def format_history(history, limit: int = 10) -> None:
+    """Format and display roll history."""
+    if not history.sessions:
+        console.print("[yellow]No roll history found.[/yellow]")
+        return
+    
+    recent_sessions = history.get_recent_sessions(limit)
+    
+    console.print(f"\n[bold green]Recent Roll History[/bold green] (last {len(recent_sessions)} sessions)")
+    
+    history_table = Table()
+    history_table.add_column("Expression", style="cyan")
+    history_table.add_column("Rolls", style="magenta")
+    history_table.add_column("Average", style="yellow")
+    history_table.add_column("Range", style="green")
+    
+    for session in recent_sessions:
+        if session.rolls:
+            min_val = min(r.total for r in session.rolls)
+            max_val = max(r.total for r in session.rolls)
+            range_str = f"{min_val}-{max_val}"
+        else:
+            range_str = "N/A"
+        
+        history_table.add_row(
+            str(session.expression),
+            str(len(session.rolls)),
+            f"{session.average_total:.2f}",
+            range_str
+        )
+    
+    console.print(history_table)
+
+
+def format_expression_info(expression: str, info_data: Dict[str, Any]) -> None:
+    """Format and display expression information."""
+    console.print(f"\n[bold green]Expression Info: {expression}[/bold green]")
+    
+    info_table = Table()
+    info_table.add_column("Property", style="cyan")
+    info_table.add_column("Value", style="magenta")
+    
+    info_table.add_row("Parsed Expression", info_data["expression"])
+    info_table.add_row("Dice Groups", str(info_data["dice_groups"]))
+    info_table.add_row("Total Dice", str(info_data["total_dice"]))
+    info_table.add_row("Modifier", str(info_data["modifier"]))
+    info_table.add_row("Min Value", str(info_data["min_value"]))
+    info_table.add_row("Max Value", str(info_data["max_value"]))
+    info_table.add_row("Average Value", f"{info_data['average_value']:.2f}")
+    
+    console.print(info_table)
+    
+    if info_data["dice_types"]:
+        _show_dice_breakdown(info_data["dice_types"])
+
+
+def _show_dice_breakdown(dice_types) -> None:
+    """Display dice breakdown table."""
+    dice_table = Table(title="Dice Breakdown")
+    dice_table.add_column("Count", style="cyan")
+    dice_table.add_column("Sides", style="magenta")
+    dice_table.add_column("Min", style="yellow")
+    dice_table.add_column("Max", style="green")
+    dice_table.add_column("Average", style="blue")
+    
+    for dice_type in dice_types:
+        dice_table.add_row(
+            str(dice_type["count"]),
+            str(dice_type["sides"]),
+            str(dice_type["min"]),
+            str(dice_type["max"]),
+            f"{dice_type['average']:.2f}",
+        )
+    
+    console.print(dice_table)
+
+
+def format_config_display(current_config, config_info) -> None:
+    """Format and display configuration information."""
+    console.print("[bold green]Current Configuration[/bold green]")
+    
+    config_table = Table()
+    config_table.add_column("Setting", style="cyan")
+    config_table.add_column("Value", style="magenta")
+    
+    config_table.add_row("Default Iterations", str(current_config.default_iterations))
+    config_table.add_row("Default Seed", str(current_config.default_seed))
+    config_table.add_row("Output Format", current_config.output_format.value)
+    config_table.add_row("Verbose", str(current_config.verbose))
+    config_table.add_row("Show Stats", str(current_config.show_stats))
+    config_table.add_row("History Limit", str(current_config.history_limit))
+    
+    console.print(config_table)
+    
+    console.print(f"\n[bold blue]Configuration Files[/bold blue]")
+    console.print(f"Config Dir: {config_info['config_dir']}")
+    console.print(f"Config File: {config_info['config_file']} ({'exists' if config_info['config_exists'] else 'missing'})")
+    console.print(f"History File: {config_info['history_file']} ({'exists' if config_info['history_exists'] else 'missing'})")
+
+
+def format_extended_statistics(extended_stats) -> None:
+    """Format and display extended statistics."""
+    ext_table = Table(title="Extended Statistics")
+    ext_table.add_column("Statistic", style="cyan")
+    ext_table.add_column("Value", style="magenta")
+    
+    ext_table.add_row("Variance", f"{extended_stats['variance']:.4f}")
+    ext_table.add_row("Std Deviation", f"{extended_stats['standard_deviation']:.4f}")
+    ext_table.add_row("Skewness", f"{extended_stats['skewness']:.4f}")
+    ext_table.add_row("Kurtosis", f"{extended_stats['kurtosis']:.4f}")
+    ext_table.add_row("CV", f"{extended_stats['coefficient_of_variation']:.4f}")
+    
+    console.print(ext_table)
+
+
+def print_success(message: str) -> None:
+    """Print a success message."""
+    console.print(f"[green]{message}[/green]")
+
+
+def print_error(message: str) -> None:
+    """Print an error message."""
+    console.print(f"[red]Error:[/red] {message}")
+
+
+def print_json(data: Dict[str, Any]) -> None:
+    """Print JSON data with proper formatting."""
+    console.print(json.dumps(data, indent=2))
