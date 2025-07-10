@@ -44,9 +44,13 @@ def roll(
     config_manager = get_config_manager()
     
     # Apply configuration defaults
-    iterations = iterations or config.default_iterations
-    seed = seed or config.default_seed
+    iterations = iterations if iterations is not None else config.default_iterations
+    seed = seed if seed is not None else config.default_seed
     stats = stats if stats is not None else config.show_stats
+    
+    # Validate iterations
+    if iterations <= 0:
+        raise ValueError("Iterations must be a positive number")
     
     # Parse and roll dice
     dice_expr = parse_dice_expression(expression)
