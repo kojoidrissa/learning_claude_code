@@ -32,10 +32,10 @@ console = Console()
 @handle_cli_error
 def roll(
     expression: str = typer.Argument(..., help="Dice expression (e.g., '3d6', '2d20+5')"),
-    iterations: int = typer.Option(None, "--iterations", "-i", help="Number of rolls"),
+    iterations: Optional[int] = typer.Option(None, "--iterations", "-i", help="Number of rolls"),
     seed: Optional[int] = typer.Option(None, "--seed", "-s", help="Random seed"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
-    stats: bool = typer.Option(None, "--stats/--no-stats", help="Show statistics"),
+    stats: Optional[bool] = typer.Option(None, "--stats/--no-stats", help="Show statistics"),
     json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
     save: bool = typer.Option(True, "--save/--no-save", help="Save to history"),
 ) -> None:
@@ -219,5 +219,27 @@ def version() -> None:
     console.print(f"dice-average version {__version__}")
 
 
+def main():
+    """Main entry point that handles dice expressions without requiring 'roll' command."""
+    import sys
+    
+    # If no arguments, show help for the full app
+    if len(sys.argv) == 1:
+        app()
+        return
+    
+    # Check if first argument is a known subcommand
+    first_arg = sys.argv[1]
+    subcommands = {"analyze", "history", "info", "config", "version"}
+    
+    if first_arg in subcommands or first_arg.startswith('-'):
+        # Run as multi-command app
+        app()
+    else:
+        # Prepend 'roll' to the arguments and run
+        sys.argv.insert(1, 'roll')
+        app()
+
+
 if __name__ == "__main__":
-    app()
+    main()

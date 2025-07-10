@@ -14,6 +14,21 @@ class TestCLI:
         """Set up test runner."""
         self.runner = CliRunner()
     
+    def _invoke_main(self, args):
+        """Helper to invoke the main CLI behavior."""
+        if len(args) == 0:
+            return self.runner.invoke(app, ['--help'])
+        
+        first_arg = args[0]
+        subcommands = {'analyze', 'history', 'info', 'config', 'version'}
+        
+        if first_arg in subcommands or first_arg.startswith('-'):
+            # Run as multi-command app
+            return self.runner.invoke(app, args)
+        else:
+            # Prepend 'roll' to the arguments and run
+            return self.runner.invoke(app, ['roll'] + args)
+    
     def test_version_command(self):
         """Test version command."""
         result = self.runner.invoke(app, ["version"])
@@ -22,14 +37,14 @@ class TestCLI:
     
     def test_roll_command_basic(self):
         """Test basic roll command."""
-        result = self.runner.invoke(app, ["roll", "3d6"])
+        result = self._invoke_main(["3d6"])
         assert result.exit_code == 0
         assert "Rolling 3d6" in result.stdout
     
     def test_roll_command_with_options(self):
         """Test roll command with options."""
-        result = self.runner.invoke(app, [
-            "roll", "2d8+3", 
+        result = self._invoke_main([
+            "2d8+3", 
             "--iterations", "5",
             "--seed", "42",
             "--verbose"
@@ -39,8 +54,8 @@ class TestCLI:
     
     def test_roll_command_json_output(self):
         """Test roll command with JSON output."""
-        result = self.runner.invoke(app, [
-            "roll", "d6", 
+        result = self._invoke_main([
+            "d6", 
             "--iterations", "3",
             "--seed", "42",
             "--json"
@@ -56,7 +71,7 @@ class TestCLI:
     
     def test_roll_command_invalid_expression(self):
         """Test roll command with invalid expression."""
-        result = self.runner.invoke(app, ["roll", "invalid"])
+        result = self._invoke_main(["invalid"])
         assert result.exit_code == 1
         assert "Error parsing dice expression" in result.stdout
     
@@ -150,8 +165,8 @@ class TestCLI:
     
     def test_roll_command_no_save(self):
         """Test roll command without saving to history."""
-        result = self.runner.invoke(app, [
-            "roll", "d6", 
+        result = self._invoke_main([
+            "d6", 
             "--iterations", "1",
             "--no-save"
         ])
@@ -160,8 +175,8 @@ class TestCLI:
     
     def test_roll_command_no_stats(self):
         """Test roll command without statistics."""
-        result = self.runner.invoke(app, [
-            "roll", "d6", 
+        result = self._invoke_main([
+            "d6", 
             "--iterations", "5",
             "--no-stats"
         ])
@@ -180,7 +195,7 @@ class TestCLI:
         ]
         
         for expr in expressions:
-            result = self.runner.invoke(app, ["roll", expr, "--iterations", "1"])
+            result = self._invoke_main([expr, "--iterations", "1"])
             assert result.exit_code == 0, f"Failed for expression: {expr}"
             assert f"Rolling {expr}" in result.stdout or expr in result.stdout
     
@@ -213,23 +228,23 @@ class TestCLI:
     
     def test_error_handling(self):
         """Test error handling for various scenarios."""
-        # Missing required argument
-        result = self.runner.invoke(app, ["roll"])
-        assert result.exit_code == 2  # Missing argument
+        # Missing required argument (should show help)
+        result = self._invoke_main([])
+        assert result.exit_code == 0  # Shows help and exits
         
         # Invalid iterations
-        result = self.runner.invoke(app, ["roll", "d6", "--iterations", "0"])
+        result = self._invoke_main(["d6", "--iterations", "0"])
         assert result.exit_code == 1
         
         # Invalid seed
-        result = self.runner.invoke(app, ["roll", "d6", "--seed", "invalid"])
+        result = self._invoke_main(["d6", "--seed", "invalid"])
         assert result.exit_code == 2  # Type error
     
     def test_edge_cases(self):
         """Test edge cases."""
         # Large number of iterations
-        result = self.runner.invoke(app, [
-            "roll", "d6", 
+        result = self._invoke_main([
+            "d6", 
             "--iterations", "1000",
             "--seed", "42"
         ])
