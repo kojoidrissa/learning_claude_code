@@ -41,7 +41,7 @@ dev = [
 ]
 
 [project.scripts]
-dice-average = "dice_average.cli:app"
+dice-average = "dice_average.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["dice_average"]
