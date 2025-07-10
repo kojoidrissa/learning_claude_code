@@ -113,7 +113,10 @@ class RollResult(BaseModel):
 
 
 class RollSession(BaseModel):
-    """A session of multiple rolls with the same expression."""
+    """
+    A session of multiple rolls with the same expression.
+    NOT NEEDED
+    """
     model_config = ConfigDict()
     
     expression: DiceExpression = Field(description="The dice expression used")
@@ -149,7 +152,10 @@ class RollSession(BaseModel):
 
 
 class StatisticsResult(BaseModel):
-    """Statistical analysis of a dice expression."""
+    """
+    Statistical analysis of a dice expression.
+    NOT NEEDED
+    """
     model_config = ConfigDict()
     
     expression: DiceExpression = Field(description="The analyzed expression")
@@ -183,7 +189,10 @@ class StatisticsResult(BaseModel):
 
 
 class RollHistory(BaseModel):
-    """History of all roll sessions."""
+    """
+    History of all roll sessions.
+    NOT NEEDED
+    """
     model_config = ConfigDict()
     
     sessions: List[RollSession] = Field(default_factory=list, description="All roll sessions")
