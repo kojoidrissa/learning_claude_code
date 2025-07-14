@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from .models import AppConfig, RollHistory, OutputFormat
+from .models import AppConfig, OutputFormat
 
 
 class ConfigManager:
@@ -29,7 +29,6 @@ class ConfigManager:
         self.config_dir.mkdir(parents=True, exist_ok=True)
         
         self._config: Optional[AppConfig] = None
-        self._history: Optional[RollHistory] = None
     
     def load_config(self) -> AppConfig:
         """
@@ -94,57 +93,6 @@ class ConfigManager:
         
         return self._config
     
-    def load_history(self) -> RollHistory:
-        """
-        Load roll history from file or create empty.
-        
-        Returns:
-            RollHistory object
-        """
-        if self._history is not None:
-            return self._history
-        
-        if self.history_file.exists():
-            try:
-                with open(self.history_file, 'r') as f:
-                    history_data = json.load(f)
-                self._history = RollHistory.model_validate(history_data)
-            except (json.JSONDecodeError, Exception) as e:
-                print(f"Warning: Could not load history file: {e}")
-                self._history = RollHistory()
-        else:
-            self._history = RollHistory()
-        
-        return self._history
-    
-    def save_history(self, history: Optional[RollHistory] = None) -> None:
-        """
-        Save roll history to file.
-        
-        Args:
-            history: RollHistory to save, uses current history if None
-        """
-        if history is not None:
-            self._history = history
-        
-        if self._history is None:
-            return
-        
-        # Limit history size
-        config = self.load_config()
-        if len(self._history.sessions) > config.history_limit:
-            self._history.sessions = self._history.sessions[-config.history_limit:]
-        
-        try:
-            with open(self.history_file, 'w') as f:
-                json.dump(self._history.model_dump(), f, indent=2, default=str)
-        except Exception as e:
-            print(f"Warning: Could not save history file: {e}")
-    
-    def clear_history(self) -> None:
-        """Clear all roll history."""
-        self._history = RollHistory()
-        self.save_history()
     
     def get_config_info(self) -> dict:
         """Get information about configuration files."""
@@ -231,14 +179,6 @@ def save_config(config: AppConfig) -> None:
     get_config_manager().save_config(config)
 
 
-def load_history() -> RollHistory:
-    """Convenience function to load roll history."""
-    return get_config_manager().load_history()
-
-
-def save_history(history: RollHistory) -> None:
-    """Convenience function to save roll history."""
-    get_config_manager().save_history(history)
 
 
 def get_config_from_env() -> dict:
@@ -252,7 +192,6 @@ def get_config_from_env() -> dict:
         "DICE_OUTPUT_FORMAT": ("output_format", OutputFormat),
         "DICE_VERBOSE": ("verbose", lambda x: x.lower() in ("true", "1", "yes")),
         "DICE_SHOW_STATS": ("show_stats", lambda x: x.lower() in ("true", "1", "yes")),
-        "DICE_HISTORY_LIMIT": ("history_limit", int),
     }
     
     for env_var, (config_key, converter) in env_mappings.items():

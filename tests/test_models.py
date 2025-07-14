@@ -4,8 +4,7 @@ import pytest
 from datetime import datetime
 
 from dice_average.models import (
-    Die, DiceGroup, DiceExpression, RollResult, RollSession,
-    StatisticsResult, RollHistory, AppConfig, OutputFormat
+    Die, DiceGroup, DiceExpression, RollResult, AppConfig, OutputFormat
 )
 
 
@@ -133,118 +132,10 @@ class TestRollResult:
         assert roll.modifier == 3
 
 
-class TestRollSession:
-    """Test RollSession model."""
-    
-    def test_empty_session(self):
-        """Test empty roll session."""
-        die = Die(sides=6)
-        group = DiceGroup(count=1, die=die)
-        expr = DiceExpression(dice_groups=[group])
-        
-        session = RollSession(expression=expr, rolls=[])
-        
-        assert session.total_rolls == 0
-        assert session.roll_totals == []
-        assert session.average_total == 0.0
-    
-    def test_session_with_rolls(self):
-        """Test session with multiple rolls."""
-        die = Die(sides=6)
-        group = DiceGroup(count=1, die=die)
-        expr = DiceExpression(dice_groups=[group])
-        
-        rolls = [
-            RollResult(expression=expr, individual_rolls=[[3]], modifier=0, total=3),
-            RollResult(expression=expr, individual_rolls=[[5]], modifier=0, total=5),
-            RollResult(expression=expr, individual_rolls=[[2]], modifier=0, total=2),
-        ]
-        
-        session = RollSession(expression=expr, rolls=rolls)
-        
-        assert session.total_rolls == 3
-        assert session.roll_totals == [3, 5, 2]
-        assert session.average_total == 10/3
-        assert session.min_total == 2
-        assert session.max_total == 5
 
 
-class TestStatisticsResult:
-    """Test StatisticsResult model."""
-    
-    def test_statistics_result(self):
-        """Test statistics result."""
-        die = Die(sides=6)
-        group = DiceGroup(count=1, die=die)
-        expr = DiceExpression(dice_groups=[group])
-        
-        distribution = {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
-        
-        stats = StatisticsResult(
-            expression=expr,
-            theoretical_min=1,
-            theoretical_max=6,
-            theoretical_average=3.5,
-            probability_distribution=distribution
-        )
-        
-        assert stats.most_likely_value in [1, 2, 3, 4, 5, 6]  # All equally likely
-        assert stats.median_value == 3.0  # First value with cumulative prob >= 0.5
 
 
-class TestRollHistory:
-    """Test RollHistory model."""
-    
-    def test_empty_history(self):
-        """Test empty roll history."""
-        history = RollHistory()
-        assert len(history.sessions) == 0
-        assert history.get_recent_sessions() == []
-    
-    def test_add_session(self):
-        """Test adding sessions to history."""
-        die = Die(sides=6)
-        group = DiceGroup(count=1, die=die)
-        expr = DiceExpression(dice_groups=[group])
-        
-        session = RollSession(expression=expr, rolls=[])
-        history = RollHistory()
-        
-        history.add_session(session)
-        assert len(history.sessions) == 1
-        assert history.sessions[0] == session
-    
-    def test_recent_sessions_limit(self):
-        """Test recent sessions limit."""
-        die = Die(sides=6)
-        group = DiceGroup(count=1, die=die)
-        expr = DiceExpression(dice_groups=[group])
-        
-        history = RollHistory()
-        
-        # Add 5 sessions
-        for i in range(5):
-            session = RollSession(expression=expr, rolls=[])
-            history.add_session(session)
-        
-        # Get recent 3
-        recent = history.get_recent_sessions(3)
-        assert len(recent) == 3
-        assert recent == history.sessions[-3:]
-    
-    def test_clear_history(self):
-        """Test clearing history."""
-        die = Die(sides=6)
-        group = DiceGroup(count=1, die=die)
-        expr = DiceExpression(dice_groups=[group])
-        
-        history = RollHistory()
-        session = RollSession(expression=expr, rolls=[])
-        history.add_session(session)
-        
-        assert len(history.sessions) == 1
-        history.clear_history()
-        assert len(history.sessions) == 0
 
 
 class TestAppConfig:
@@ -259,7 +150,6 @@ class TestAppConfig:
         assert config.output_format == OutputFormat.TEXT
         assert config.verbose is False
         assert config.show_stats is False
-        assert config.history_limit == 100
     
     def test_config_validation(self):
         """Test configuration validation."""
@@ -270,7 +160,6 @@ class TestAppConfig:
             output_format=OutputFormat.JSON,
             verbose=True,
             show_stats=False,
-            history_limit=50
         )
         
         assert config.default_iterations == 50
@@ -278,15 +167,11 @@ class TestAppConfig:
         assert config.output_format == OutputFormat.JSON
         assert config.verbose is True
         assert config.show_stats is False
-        assert config.history_limit == 50
         
         # Invalid iterations
         with pytest.raises(ValueError):
             AppConfig(default_iterations=0)
         
-        # Invalid history limit
-        with pytest.raises(ValueError):
-            AppConfig(history_limit=0)
         
         # Invalid seed
         with pytest.raises(ValueError):

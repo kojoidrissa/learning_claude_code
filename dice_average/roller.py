@@ -3,7 +3,7 @@
 import random
 from typing import List, Optional, Tuple
 
-from .models import DiceExpression, RollResult, RollSession
+from .models import DiceExpression, RollResult
 
 
 class DiceRoller:
@@ -48,7 +48,7 @@ class DiceRoller:
             total=total
         )
     
-    def roll_multiple(self, expression: DiceExpression, iterations: int) -> RollSession:
+    def roll_multiple(self, expression: DiceExpression, iterations: int) -> List[RollResult]:
         """
         Roll a dice expression multiple times.
         
@@ -57,7 +57,7 @@ class DiceRoller:
             iterations: Number of times to roll
             
         Returns:
-            RollSession with all results
+            List of RollResult objects
         """
         if iterations <= 0:
             raise ValueError("Iterations must be positive")
@@ -67,11 +67,7 @@ class DiceRoller:
             roll = self.roll_single(expression)
             rolls.append(roll)
         
-        return RollSession(
-            expression=expression,
-            rolls=rolls,
-            seed=self.seed
-        )
+        return rolls
     
     def roll_with_target(self, expression: DiceExpression, target: int, 
                         max_attempts: int = 10000) -> Tuple[RollResult, int]:
@@ -106,7 +102,7 @@ class DiceRoller:
 
 
 def roll_dice(expression: DiceExpression, iterations: int = 1, 
-              seed: Optional[int] = None) -> RollSession:
+              seed: Optional[int] = None) -> List[RollResult]:
     """
     Convenience function to roll dice.
     
@@ -116,7 +112,7 @@ def roll_dice(expression: DiceExpression, iterations: int = 1,
         seed: Random seed for reproducible results
         
     Returns:
-        RollSession with results
+        List of RollResult objects
     """
     roller = DiceRoller(seed=seed)
     return roller.roll_multiple(expression, iterations)
@@ -202,12 +198,12 @@ class DiceSimulator:
         Returns:
             Dictionary with comparison results
         """
-        session1 = self.roller.roll_multiple(expr1, iterations)
-        session2 = self.roller.roll_multiple(expr2, iterations)
+        rolls1 = self.roller.roll_multiple(expr1, iterations)
+        rolls2 = self.roller.roll_multiple(expr2, iterations)
         
-        expr1_wins = sum(1 for r1, r2 in zip(session1.rolls, session2.rolls) 
+        expr1_wins = sum(1 for r1, r2 in zip(rolls1, rolls2) 
                         if r1.total > r2.total)
-        expr2_wins = sum(1 for r1, r2 in zip(session1.rolls, session2.rolls) 
+        expr2_wins = sum(1 for r1, r2 in zip(rolls1, rolls2) 
                         if r2.total > r1.total)
         ties = iterations - expr1_wins - expr2_wins
         
@@ -221,6 +217,6 @@ class DiceSimulator:
             "expr1_win_rate": expr1_wins / iterations,
             "expr2_win_rate": expr2_wins / iterations,
             "tie_rate": ties / iterations,
-            "expr1_avg": session1.average_total,
-            "expr2_avg": session2.average_total,
+            "expr1_avg": sum(r.total for r in rolls1) / len(rolls1),
+            "expr2_avg": sum(r.total for r in rolls2) / len(rolls2),
         }

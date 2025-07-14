@@ -8,7 +8,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
 
-from .models import RollSession
+from .models import RollResult, DiceExpression
 from .parser import DiceParseError
 
 console = Console()
@@ -28,41 +28,29 @@ def handle_parse_error(expression: str, error: DiceParseError) -> None:
         console.print(f"  • {example}")
 
 
-def format_roll_result(session: RollSession, verbose: bool = False, 
+def format_roll_result(roll: RollResult, expression: DiceExpression, verbose: bool = False, 
                       show_stats: bool = True) -> None:
     """Format and display roll results."""
-    _format_single_roll(session, verbose)
+    _format_single_roll(roll, expression, verbose)
 
 
-def _format_single_roll(session: RollSession, verbose: bool) -> None:
+def _format_single_roll(roll: RollResult, expression: DiceExpression, verbose: bool) -> None:
     """Format output for a single roll."""
-    roll = session.rolls[0]
-    console.print(f"\n[bold green]Rolling {session.expression}[/bold green]")
+    console.print(f"\n[bold green]Rolling {expression}[/bold green]")
     
     if verbose:
-        _show_roll_breakdown(roll, session)
+        _show_roll_breakdown(roll, expression)
     
     console.print(f"[bold blue]Result: {roll.total}[/bold blue]")
-    console.print(f"[dim]Theoretical Average: {session.expression.average_value:.2f}[/dim]")
+    console.print(f"[dim]Theoretical Average: {expression.average_value:.2f}[/dim]")
 
 
-def _format_multiple_rolls(session: RollSession, verbose: bool, show_stats: bool) -> None:
-    """Format output for multiple rolls."""
-    console.print(f"\n[bold green]Rolling {session.expression} × {len(session.rolls)}[/bold green]")
-    
-    if verbose:
-        _show_multiple_roll_details(session)
-    
-    # Show only the average result and theoretical average
-    avg_result = sum(roll.total for roll in session.rolls) / len(session.rolls)
-    console.print(f"[bold blue]Average Result: {avg_result:.2f}[/bold blue]")
-    console.print(f"[dim]Theoretical Average: {session.expression.average_value:.2f}[/dim]")
 
 
-def _show_roll_breakdown(roll, session: RollSession) -> None:
+def _show_roll_breakdown(roll, expression: DiceExpression) -> None:
     """Show detailed breakdown of individual dice rolls."""
     for i, group_rolls in enumerate(roll.individual_rolls):
-        group = session.expression.dice_groups[i]
+        group = expression.dice_groups[i]
         rolls_str = " + ".join(str(r) for r in group_rolls)
         console.print(f"  {group.count}d{group.die.sides}: [{rolls_str}] = {sum(group_rolls)}")
     
@@ -70,13 +58,6 @@ def _show_roll_breakdown(roll, session: RollSession) -> None:
         console.print(f"  Modifier: {roll.modifier:+d}")
 
 
-def _show_multiple_roll_details(session: RollSession) -> None:
-    """Show details for multiple roll sessions."""
-    if len(session.rolls) <= 20:
-        for i, roll in enumerate(session.rolls, 1):
-            console.print(f"  Roll {i}: {roll.total}")
-    else:
-        console.print(f"  Results: {', '.join(str(r.total) for r in session.rolls[:10])}...")
 
 
 
@@ -87,38 +68,6 @@ def _show_multiple_roll_details(session: RollSession) -> None:
 
 
 
-def format_history(history, limit: int = 10) -> None:
-    """Format and display roll history."""
-    if not history.sessions:
-        console.print("[yellow]No roll history found.[/yellow]")
-        return
-    
-    recent_sessions = history.get_recent_sessions(limit)
-    
-    console.print(f"\n[bold green]Recent Roll History[/bold green] (last {len(recent_sessions)} sessions)")
-    
-    history_table = Table()
-    history_table.add_column("Expression", style="cyan")
-    history_table.add_column("Rolls", style="magenta")
-    history_table.add_column("Average", style="yellow")
-    history_table.add_column("Range", style="green")
-    
-    for session in recent_sessions:
-        if session.rolls:
-            min_val = min(r.total for r in session.rolls)
-            max_val = max(r.total for r in session.rolls)
-            range_str = f"{min_val}-{max_val}"
-        else:
-            range_str = "N/A"
-        
-        history_table.add_row(
-            str(session.expression),
-            str(len(session.rolls)),
-            f"{session.average_total:.2f}",
-            range_str
-        )
-    
-    console.print(history_table)
 
 
 def format_expression_info(expression: str, info_data: Dict[str, Any]) -> None:

@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from dice_average.config import ConfigManager, get_config_from_env, load_config_with_env
-from dice_average.models import AppConfig, RollHistory, OutputFormat
+from dice_average.models import AppConfig, OutputFormat
 
 
 class TestConfigManager:
@@ -37,7 +37,6 @@ class TestConfigManager:
             assert config.output_format == OutputFormat.TEXT
             assert config.verbose is False
             assert config.show_stats is False
-            assert config.history_limit == 100
     
     def test_save_and_load_config(self):
         """Test saving and loading configuration."""
@@ -52,7 +51,6 @@ class TestConfigManager:
                 output_format=OutputFormat.JSON,
                 verbose=True,
                 show_stats=False,
-                history_limit=50
             )
             
             # Save and reload
@@ -64,7 +62,6 @@ class TestConfigManager:
             assert loaded_config.output_format == OutputFormat.JSON
             assert loaded_config.verbose is True
             assert loaded_config.show_stats is False
-            assert loaded_config.history_limit == 50
     
     def test_update_config(self):
         """Test updating configuration."""
@@ -97,44 +94,6 @@ class TestConfigManager:
             assert isinstance(config, AppConfig)
             assert config.default_iterations == 1
     
-    def test_load_empty_history(self):
-        """Test loading empty history."""
-        with TemporaryDirectory() as tmpdir:
-            config_dir = Path(tmpdir) / "test_config"
-            manager = ConfigManager(config_dir)
-            
-            history = manager.load_history()
-            
-            assert isinstance(history, RollHistory)
-            assert len(history.sessions) == 0
-    
-    def test_save_and_load_history(self):
-        """Test saving and loading history."""
-        with TemporaryDirectory() as tmpdir:
-            config_dir = Path(tmpdir) / "test_config"
-            manager = ConfigManager(config_dir)
-            
-            # Create history with some sessions
-            history = RollHistory()
-            # Note: We'd need to create proper RollSession objects here
-            # For now, test with empty history
-            
-            manager.save_history(history)
-            loaded_history = manager.load_history()
-            
-            assert isinstance(loaded_history, RollHistory)
-            assert len(loaded_history.sessions) == 0
-    
-    def test_clear_history(self):
-        """Test clearing history."""
-        with TemporaryDirectory() as tmpdir:
-            config_dir = Path(tmpdir) / "test_config"
-            manager = ConfigManager(config_dir)
-            
-            manager.clear_history()
-            history = manager.load_history()
-            
-            assert len(history.sessions) == 0
     
     def test_get_config_info(self):
         """Test getting configuration information."""
@@ -186,7 +145,6 @@ class TestConfigManager:
                 "output_format": "json",
                 "verbose": True,
                 "show_stats": False,
-                "history_limit": 200
             }
             external_config.write_text(json.dumps(config_data))
             
@@ -198,7 +156,6 @@ class TestConfigManager:
             assert imported_config.output_format == OutputFormat.JSON
             assert imported_config.verbose is True
             assert imported_config.show_stats is False
-            assert imported_config.history_limit == 200
     
     def test_import_nonexistent_config(self):
         """Test importing from nonexistent file."""
@@ -244,24 +201,7 @@ class TestConfigManager:
             
             assert exported_data["default_iterations"] == 150
     
-    def test_history_limit_enforcement(self):
-        """Test that history limit is enforced."""
-        with TemporaryDirectory() as tmpdir:
-            config_dir = Path(tmpdir) / "test_config"
-            manager = ConfigManager(config_dir)
-            
-            # Set low history limit
-            manager.update_config(history_limit=3)
-            
-            # Create history with many sessions
-            history = RollHistory()
-            # Note: In a real test, we'd add actual RollSession objects
-            # For now, we'll test the limit enforcement concept
-            
-            manager.save_history(history)
-            loaded_history = manager.load_history()
-            
-            assert len(loaded_history.sessions) <= 3
+    # History functionality removed - test removed
 
 
 class TestEnvironmentConfig:
@@ -302,7 +242,6 @@ class TestEnvironmentConfig:
             os.environ["DICE_OUTPUT_FORMAT"] = "json"
             os.environ["DICE_VERBOSE"] = "true"
             os.environ["DICE_SHOW_STATS"] = "false"
-            os.environ["DICE_HISTORY_LIMIT"] = "75"
             
             config_overrides = get_config_from_env()
             
@@ -311,7 +250,6 @@ class TestEnvironmentConfig:
             assert config_overrides["output_format"] == OutputFormat.JSON
             assert config_overrides["verbose"] is True
             assert config_overrides["show_stats"] is False
-            assert config_overrides["history_limit"] == 75
         
         finally:
             # Restore original environment
