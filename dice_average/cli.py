@@ -68,33 +68,6 @@ def _execute_roll(dice_expr: Any, iterations: int, seed: Optional[int],
         return rolls[0]  # Return the first (and only) roll result
 
 
-# def _save_session_to_history(config_manager: Any, session: Any) -> None:
-#     """Save session to history."""
-#     history = config_manager.load_history()
-#     history.add_session(session)
-#     config_manager.save_history(history)
-
-
-
-
-# @app.command()
-# @handle_cli_error
-# def history(
-#     limit: int = typer.Option(10, "--limit", "-l", help="Number of recent sessions to show"),
-#     clear: bool = typer.Option(False, "--clear", "-c", help="Clear all history"),
-# ) -> None:
-#     """Show or manage roll history."""
-#     config_manager = get_config_manager()
-#     history_data = config_manager.load_history()
-#     
-#     if clear:
-#         if typer.confirm("Are you sure you want to clear all history?"):
-#             config_manager.clear_history()
-#             print_success("History cleared.")
-#         return
-#     
-#     format_history(history_data, limit)
-
 
 @app.command()
 @handle_cli_error
