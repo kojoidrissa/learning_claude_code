@@ -8,7 +8,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .config import get_config_manager, load_config_with_env
 from .display import (
-    format_roll_result, format_history,
+    format_roll_result,
     format_expression_info, format_config_display,
     print_success
 )
@@ -48,14 +48,10 @@ def roll(
     
     # Parse and roll dice
     dice_expr = parse_dice_expression(expression)
-    session = _execute_roll(dice_expr, iterations, seed, expression)
-    
-    # Save to history
-    if save:
-        _save_session_to_history(config_manager, session)
+    roll_result = _execute_roll(dice_expr, iterations, seed, expression)
     
     # Output results
-    format_roll_result(session, verbose, False)
+    format_roll_result(roll_result, dice_expr, verbose, False)
 
 
 def _execute_roll(dice_expr: Any, iterations: int, seed: Optional[int], 
@@ -67,37 +63,10 @@ def _execute_roll(dice_expr: Any, iterations: int, seed: Optional[int],
         console=console,
     ) as progress:
         task = progress.add_task(f"Rolling {expression}...", total=None)
-        session = roll_dice(dice_expr, iterations, seed)
+        rolls = roll_dice(dice_expr, iterations, seed)
         progress.update(task, completed=True)
-        return session
+        return rolls[0]  # Return the first (and only) roll result
 
-
-def _save_session_to_history(config_manager: Any, session: Any) -> None:
-    """Save session to history."""
-    history = config_manager.load_history()
-    history.add_session(session)
-    config_manager.save_history(history)
-
-
-
-
-@app.command()
-@handle_cli_error
-def history(
-    limit: int = typer.Option(10, "--limit", "-l", help="Number of recent sessions to show"),
-    clear: bool = typer.Option(False, "--clear", "-c", help="Clear all history"),
-) -> None:
-    """Show or manage roll history."""
-    config_manager = get_config_manager()
-    history_data = config_manager.load_history()
-    
-    if clear:
-        if typer.confirm("Are you sure you want to clear all history?"):
-            config_manager.clear_history()
-            print_success("History cleared.")
-        return
-    
-    format_history(history_data, limit)
 
 
 @app.command()

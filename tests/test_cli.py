@@ -70,11 +70,6 @@ class TestCLI:
         assert result.exit_code == 1
         assert "Error parsing dice expression" in result.stdout
     
-    def test_history_command_empty(self):
-        """Test history command with empty history."""
-        result = self.runner.invoke(app, ["history"])
-        assert result.exit_code == 0
-        # Should handle empty history gracefully
     
     def test_config_command_show(self):
         """Test config command show."""
@@ -144,7 +139,7 @@ class TestCLI:
         assert "dice-average" in result.stdout
         
         # Command help
-        commands = ["roll", "history", "info", "config", "version"]
+        commands = ["roll", "info", "config", "version"]
         for cmd in commands:
             result = self.runner.invoke(app, [cmd, "--help"])
             assert result.exit_code == 0

@@ -3,7 +3,7 @@
 import pytest
 
 from dice_average.roller import DiceRoller, roll_dice, roll_dice_once, DiceSimulator
-from dice_average.models import Die, DiceGroup, DiceExpression, RollResult, RollSession
+from dice_average.models import Die, DiceGroup, DiceExpression, RollResult
 from dice_average.parser import parse_dice_expression
 
 
@@ -86,13 +86,12 @@ class TestDiceRoller:
         expr = DiceExpression(dice_groups=[group])
         
         roller = DiceRoller(seed=42)
-        session = roller.roll_multiple(expr, 10)
+        rolls = roller.roll_multiple(expr, 10)
         
-        assert isinstance(session, RollSession)
-        assert session.expression == expr
-        assert len(session.rolls) == 10
-        assert session.seed == 42
-        assert all(isinstance(roll, RollResult) for roll in session.rolls)
+        assert isinstance(rolls, list)
+        assert len(rolls) == 10
+        assert all(isinstance(roll, RollResult) for roll in rolls)
+        assert all(roll.expression == expr for roll in rolls)
     
     def test_roll_multiple_zero_iterations(self):
         """Test rolling with zero iterations."""
@@ -161,11 +160,11 @@ class TestConvenienceFunctions:
     def test_roll_dice(self):
         """Test roll_dice convenience function."""
         expr = parse_dice_expression("3d6")
-        session = roll_dice(expr, 5, seed=42)
+        rolls = roll_dice(expr, 5, seed=42)
         
-        assert isinstance(session, RollSession)
-        assert len(session.rolls) == 5
-        assert session.seed == 42
+        assert isinstance(rolls, list)
+        assert len(rolls) == 5
+        assert all(isinstance(roll, RollResult) for roll in rolls)
     
     def test_roll_dice_once(self):
         """Test roll_dice_once convenience function."""
