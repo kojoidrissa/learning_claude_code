@@ -9,6 +9,6 @@ on:
 jobs:
   say_hello:
     name: "Say Hello"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - run: echo "Hello CI!"
