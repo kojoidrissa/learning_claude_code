@@ -1,0 +1,11 @@
+on:
+  pull_request:
+  push:
+    branches:
+      main
+
+jobs:
+  hsay_hello:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "Hello CI!"
