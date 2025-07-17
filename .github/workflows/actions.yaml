@@ -12,3 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Hello CI!"
+
+  python_version:
+    name: "Display the latest Python version. "
+    runs-on: ubuntu-latest
+    steps:
+      - run: python --version
