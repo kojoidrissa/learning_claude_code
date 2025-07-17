@@ -70,7 +70,6 @@ class TestCLI:
         assert result.exit_code == 1
         assert "Error parsing dice expression" in result.stdout
     
-    # History command removed - test disabled
     
     def test_config_command_show(self):
         """Test config command show."""

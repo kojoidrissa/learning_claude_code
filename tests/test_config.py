@@ -201,7 +201,6 @@ class TestConfigManager:
             
             assert exported_data["default_iterations"] == 150
     
-    # History functionality removed - test removed
 
 
 class TestEnvironmentConfig:
