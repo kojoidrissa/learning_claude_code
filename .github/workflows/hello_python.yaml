@@ -1,0 +1,10 @@
+name: Hello Python
+
+on: push
+
+jobs:
+  run_python:
+    name: "Run the latest Ubuntu Python version. "
+    runs-on: ubuntu-latest
+    steps:
+      - run: python --version
