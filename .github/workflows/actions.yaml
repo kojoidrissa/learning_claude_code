@@ -7,12 +7,6 @@ on:
       main
 
 jobs:
-  say_hello:
-    name: "Say Hello"
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Hello CI!"
-
   python_version:
     name: "Display the latest Python version. "
     runs-on: ubuntu-latest
@@ -27,3 +21,15 @@ jobs:
         with:
           python-version: '3.13'
       - run: python --version
+
+  test:
+    name: "Run Tests Python 3.13"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python --version
+      - run: python -m pip install --system .
+      - run: pytest
