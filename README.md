@@ -21,24 +21,30 @@ Initially created with Claude
 
 ## Installation
 
-### From PyPI (once published)
+### Prerequisites
+
+This project uses [UV](https://docs.astral.sh/uv/) for dependency management. Install it first:
+
 ```bash
-pip install dice-average
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or with Homebrew
+brew install uv
 ```
 
 ### From Source
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/dice-average.git
 cd dice-average
 
-# Create a virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install in development mode
-pip install -e ".[dev]"
+# Install the project and all dependencies (including dev tools)
+uv sync --all-extras
 ```
+
+That's it — UV handles the virtual environment and dependency resolution automatically.
 
 ## Usage
 
@@ -46,15 +52,15 @@ pip install -e ".[dev]"
 
 Roll a single die:
 ```bash
-dice-average roll d20
-dice-average roll 1d20  # equivalent
+uv run dice-average roll d20
+uv run dice-average roll 1d20  # equivalent
 ```
 
 Roll multiple dice:
 ```bash
-dice-average roll 3d6
-dice-average roll "2d8 + 1d4"
-dice-average roll "4d6 + 2"
+uv run dice-average roll 3d6
+uv run dice-average roll "2d8 + 1d4"
+uv run dice-average roll "4d6 + 2"
 ```
 
 ### Statistical Analysis
@@ -62,43 +68,43 @@ dice-average roll "4d6 + 2"
 Roll multiple times to see statistics:
 ```bash
 # Roll 3d6 1000 times with statistics
-dice-average roll 3d6 -i 1000 --stats
+uv run dice-average roll 3d6 -i 1000 --stats
 
 # Roll many times for detailed analysis
-dice-average roll 3d6 -i 10000 --stats
+uv run dice-average roll 3d6 -i 10000 --stats
 
 # Set a seed for reproducible results
-dice-average roll 2d20 -i 1000 --seed 42 --stats
+uv run dice-average roll 2d20 -i 1000 --seed 42 --stats
 ```
 
 ### Advanced Features
 
 Show individual roll results:
 ```bash
-dice-average roll 4d6 -i 10 --verbose
+uv run dice-average roll 4d6 -i 10 --verbose
 ```
 
 Export results as JSON:
 ```bash
-dice-average roll 3d8 -i 1000 --json > results.json
+uv run dice-average roll 3d8 -i 1000 --json > results.json
 ```
 
 Analyze probability distribution:
 ```bash
-dice-average analyze 3d6
-dice-average analyze "2d10 + 5" --extended
+uv run dice-average analyze 3d6
+uv run dice-average analyze "2d10 + 5" --extended
 ```
 
 View roll history:
 ```bash
 # Show all history
-dice-average history
+uv run dice-average history
 
 # Show last 10 rolls
-dice-average history --limit 10
+uv run dice-average history --limit 10
 
 # Clear history
-dice-average history --clear
+uv run dice-average history --clear
 ```
 
 ### Command Options
@@ -221,14 +227,14 @@ DICE_HISTORY_LIMIT=50
 Or use the config command:
 ```bash
 # Show current configuration
-dice-average config --show
+uv run dice-average config --show
 
 # Set configuration values
-dice-average config --set default_iterations --value 100
-dice-average config --set show_stats --value true
+uv run dice-average config --set default_iterations --value 100
+uv run dice-average config --set show_stats --value true
 
 # Reset to defaults
-dice-average config --reset
+uv run dice-average config --reset
 ```
 
 ## Development
@@ -236,25 +242,25 @@ dice-average config --reset
 ### Running Tests
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # Run with coverage
-pytest --cov=dice_average
+uv run pytest --cov=dice_average
 
 # Run specific test file
-pytest tests/test_parser.py
+uv run pytest tests/test_parser.py
 ```
 
 ### Code Quality
 ```bash
 # Format code
-black dice_average tests
+uv run black dice_average tests
 
 # Lint code
-ruff check dice_average tests
+uv run ruff check dice_average tests
 
 # Type checking
-mypy dice_average
+uv run mypy dice_average
 ```
 
 ### Project Structure
